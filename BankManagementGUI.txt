@@ -1,0 +1,194 @@
+package game;
+
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+class Bank {
+    private String bankName;
+    private List<Customer> customers;
+
+    public Bank(String bankName) {
+        this.bankName = bankName;
+        customers = new ArrayList<>();
+    }
+
+    public void addCustomer(Customer customer) {
+        customers.add(customer);
+    }
+
+    public List<Customer> getCustomers() {
+        return customers;
+    }
+}
+
+class Customer {
+    private String name;
+    private double balance;
+
+    public Customer(String name) {
+        this.name = name;
+        balance = 0.0;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void deposit(double amount) {
+        balance += amount;
+    }
+
+    public boolean withdraw(double amount) {
+        if (amount <= balance) {
+            balance -= amount;
+            return true;
+        } else {
+            return false;
+        }
+    }
+}
+
+public class BankManagementGUI extends JFrame implements ActionListener {
+    private Bank bank;
+    private JTextField customerNameField;
+    private JTextField amountField;
+    private JTextArea customersTextArea;
+
+    public BankManagementGUI() {
+        bank = new Bank("MyBank");
+
+        setTitle("320126512133 Bank Management System");
+        setSize(400, 300);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new GridLayout(4, 2));
+
+        JLabel customerNameLabel = new JLabel("Customer Name:");
+        mainPanel.add(customerNameLabel);
+
+        customerNameField = new JTextField();
+        mainPanel.add(customerNameField);
+
+        JLabel amountLabel = new JLabel("Amount:");
+        mainPanel.add(amountLabel);
+
+        amountField = new JTextField();
+        mainPanel.add(amountField);
+
+        JButton createButton = new JButton("Create Customer");
+        createButton.addActionListener(this);
+        mainPanel.add(createButton);
+
+        JButton depositButton = new JButton("Deposit");
+        depositButton.addActionListener(this);
+        mainPanel.add(depositButton);
+
+        JButton withdrawButton = new JButton("Withdraw");
+        withdrawButton.addActionListener(this);
+        mainPanel.add(withdrawButton);
+
+        customersTextArea = new JTextArea();
+        customersTextArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(customersTextArea);
+        mainPanel.add(scrollPane);
+
+        add(mainPanel);
+        setVisible(true);
+    }
+
+    public void actionPerformed(ActionEvent e) {
+        String customerName = customerNameField.getText();
+        String amountStr = amountField.getText();
+        double amount;
+
+        try {
+            amount = Double.parseDouble(amountStr);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Invalid amount. Please enter a valid number.");
+            return;
+        }
+
+        if (e.getActionCommand().equals("Create Customer")) {
+            if (customerName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Customer name cannot be empty.");
+                return;
+            }
+
+            Customer customer = new Customer(customerName);
+            bank.addCustomer(customer);
+            updateCustomersTextArea();
+            customerNameField.setText("");
+            amountField.setText("");
+        } else if (e.getActionCommand().equals("Deposit")) {
+            if (customerName.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter customer name.");
+                return;
+            }
+
+            Customer selectedCustomer = findCustomerByName(customerName);
+            if (selectedCustomer == null) {
+                JOptionPane.showMessageDialog(this, "Customer not found.");
+                return;
+            }
+
+
+selectedCustomer.deposit(amount);
+            updateCustomersTextArea();
+            amountField.setText("");
+        } else if (e.getActionCommand().equals("Withdraw")) {
+            if (customerName.isEmpty()) {
+                JOptionPane.showMessageDialog(this,"Please enter customer name."); return; }
+        Customer selectedCustomer = findCustomerByName(customerName);
+        if (selectedCustomer == null) {
+            JOptionPane.showMessageDialog(this, "Customer not found.");
+            return;
+        }
+
+        boolean success = selectedCustomer.withdraw(amount);
+        if (success) {
+            updateCustomersTextArea();
+            amountField.setText("");
+        } else {
+            JOptionPane.showMessageDialog(this, "Insufficient balance.");
+        }
+    }
+}
+
+private Customer findCustomerByName(String name) {
+    List<Customer> customers = bank.getCustomers();
+    for (Customer customer : customers) {
+        if (customer.getName().equalsIgnoreCase(name)) {
+            return customer;
+        }
+    }
+    return null;
+}
+
+private void updateCustomersTextArea() {
+    customersTextArea.setText("");
+    List<Customer> customers = bank.getCustomers();
+    for (Customer customer : customers) {
+        customersTextArea.append("Customer Name: " + customer.getName() + ", Balance: " + customer.getBalance() + "\n");
+    }
+}
+
+
+public static void main(String[] args) {
+    SwingUtilities.invokeLater(new Runnable() {
+        public void run() {
+            new BankManagementGUI();
+        }
+    });
+
+}
+}
